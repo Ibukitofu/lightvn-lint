@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+_cache/
+out/
+out3/
+data/refpaths.json
+data/inventory.json
+lvlib.py
+ACCEPTANCE.md
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
