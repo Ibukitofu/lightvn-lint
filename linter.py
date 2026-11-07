@@ -18,10 +18,10 @@ import lvparse as P
 import lvctx
 import lvfind
 
-RULES = ["R1", "R2", "R3", "R4", "R5", "R6"]
+RULES = ["R1", "R2", "R3", "R4", "R5", "R6", "R7"]
 RULE_MODULES = {
     "R1": "rule_r1", "R2": "rule_r2", "R3": "rule_r3",
-    "R4": "rule_r4", "R5": "rule_r5", "R6": "rule_r6",
+    "R4": "rule_r4", "R5": "rule_r5", "R6": "rule_r6", "R7": "rule_r7",
 }
 RULE_TITLES = {
     "R1": "资源引用完整性（贴图/音频丢失、路径被翻译）",
@@ -30,6 +30,7 @@ RULE_TITLES = {
     "R4": "命令语法校验（命令被翻译、参数缺失）",
     "R5": "逻辑键一致性（分支永远不成立）",
     "R6": "代码骨架一致性（引号外被改动）",
+    "R7": "未翻译检测（两侧相同但仍是日文）",
 }
 
 
@@ -382,10 +383,8 @@ def main(argv=None):
         if bad:
             print("!! 以下规则未正常完成: %s" % ", ".join(bad), file=sys.stderr)
         print("总耗时 %.1fs" % (time.time() - t_start))
-    print("files=%d lines=%d  R1=%d R2=%d R3=%d R4=%d R5=%d R6=%d" % (
-        len(fids), total_lines,
-        counts.get("R1", 0), counts.get("R2", 0), counts.get("R3", 0),
-        counts.get("R4", 0), counts.get("R5", 0), counts.get("R6", 0)))
+    _rule_parts = " ".join("%s=%d" % (r, counts.get(r, 0)) for r in rules)
+    print("files=%d lines=%d  %s" % (len(fids), total_lines, _rule_parts))
     return 0
 
 
