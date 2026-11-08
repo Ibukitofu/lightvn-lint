@@ -30,6 +30,12 @@ ESC_RE = re.compile(r'\\[a-z/]')
 # 至少这么多个假名才算"没翻译"——单个假名可能是「ッ」这类语气残留
 MIN_KANA = 2
 
+# [xxx] 是作者留的占位名（如 [あいうえおかきくけこ]），不是待译文本
+PLACEHOLDER_RE = re.compile(r'\[[^\]]*\]')
+
+# 这些假名在中文里常用来表拟声/语气，残留不算漏译
+OK_KANA = set('っー・゛゜あいうえおん')
+
 
 def _strip_prefix(line):
     s = line.lstrip(WS)
@@ -38,14 +44,33 @@ def _strip_prefix(line):
     return s
 
 
+def _skip_condition(s):
+    """跳过 もし ( ... ) 条件括号，返回其后的内容。"""
+    if not s.startswith('もし'):
+        return s
+    i = s.find('(')
+    if i < 0:
+        return s
+    d = 0
+    for k in range(i, len(s)):
+        if s[k] == '(':
+            d += 1
+        elif s[k] == ')':
+            d -= 1
+            if d == 0:
+                return s[k+1:].lstrip(WS)
+    return s
+
+
 def body_text(line):
     """取出这一行里"给人看"的部分，剥离占位符/标签/转义。"""
     s = _strip_prefix(line)
+    s = _skip_condition(s)
     if s.startswith('-' + QUOTE):
         s = s[1:]
     if s.startswith(QUOTE):
         s = s[1:]
-    s = VAR_RE.sub('', TAG_RE.sub('', s))
+    s = PLACEHOLDER_RE.sub('', VAR_RE.sub('', TAG_RE.sub('', s)))
     return ESC_RE.sub('', s).strip()
 
 
@@ -61,6 +86,10 @@ def classify_line(line):
     if s.startswith('\u25a0'):
         return None                       # ■ 作者标注
     if s.startswith(QUOTE) or s.startswith('-' + QUOTE):
+        return 'dlg'
+    # 条件命令后面直接跟台词（如 ~もし (x == 1) "……台词），也是显示文本
+    _rest = _skip_condition(s)
+    if _rest is not s and (_rest.startswith(QUOTE) or _rest.startswith('-' + QUOTE)):
         return 'dlg'
     if s.startswith('|'):
         return None                       # 命令续行
@@ -93,10 +122,25 @@ def run(ctx, baseline=None):
         for i in range(n):
             jp = ctx.jp_line(fid, i)
             zh = ctx.zh_line(fid, i)
-            if zh is None or jp != zh:
-                continue                  # 两侧不同 -> 已经翻译过
+            if zh is None:
+                continue
             kind = classify_line(jp)
             if kind is None:
+                continue
+            if jp != zh:
+                # 已改动，但译文里仍残留假名（多半是漏译了一部分）
+                if kind != 'dlg':
+                    continue
+                zb = body_text(zh)
+                kz = [c for c in KANA_RE.findall(zb) if c not in OK_KANA]
+                if len(kz) < MIN_KANA:
+                    continue
+                out.append(lvfind.make(
+                    RULE, 'partial_translation', 'mid', fid, i + 1,
+                    jp=jp, zh=zh,
+                    detail='译文残留日文（%d 个假名）：%s'
+                           % (len(kz), zb[:60]),
+                    severity_note='该行已改动，但译文里仍有假名，说明只译了一部分'))
                 continue
             body = body_text(jp)
             if len(body) < 3:

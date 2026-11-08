@@ -125,6 +125,18 @@ def run(ctx):
                 continue
             if jst.startswith('~【') or jst.startswith('【'):
                 continue                        # 说话人标记，本来就该翻译
+            # 无引号的台词续行（接在上一条台词后面、不以命令开头）也是显示文本,
+            # 翻译后骨架必然整体改变，不属于代码损坏。
+            if not jst.startswith('~') and not jst.startswith('.'):
+                _tok = jst.split(' ')[0].split(chr(0x3000))[0]
+                try:
+                    import lvparse as _P
+                    _known = _P.is_known_command(_tok)
+                except Exception:
+                    _known = True
+                if not _known:
+                    continue
+
             # 非对话行即视为代码行，直接比对骨架
             jb = skeleton(jline)
             zb = skeleton(zline)
