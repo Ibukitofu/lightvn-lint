@@ -18,10 +18,10 @@ import lvparse as P
 import lvctx
 import lvfind
 
-RULES = ["R1", "R2", "R3", "R4", "R5", "R6", "R7"]
+RULES = ["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8"]
 RULE_MODULES = {
     "R1": "rule_r1", "R2": "rule_r2", "R3": "rule_r3",
-    "R4": "rule_r4", "R5": "rule_r5", "R6": "rule_r6", "R7": "rule_r7",
+    "R4": "rule_r4", "R5": "rule_r5", "R6": "rule_r6", "R7": "rule_r7", "R8": "rule_r8",
 }
 RULE_TITLES = {
     "R1": "资源引用完整性（贴图/音频丢失、路径被翻译）",
@@ -31,6 +31,7 @@ RULE_TITLES = {
     "R5": "逻辑键一致性（分支永远不成立）",
     "R6": "代码骨架一致性（引号外被改动）",
     "R7": "未翻译检测（两侧相同但仍是日文）",
+    "R8": "续行台词未翻译（-引号形态）",
 }
 
 
