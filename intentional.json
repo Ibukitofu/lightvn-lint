@@ -1,0 +1,4 @@
+{
+  "description": "有意变更白名单：命中 (file, line) 的结果不计入「翻译引入」，origin 标为 intentional。行号为 1-based。",
+  "entries": []
+}
